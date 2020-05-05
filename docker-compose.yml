@@ -14,4 +14,6 @@ services:
       - db
     ports:
       - 80:8000
+    volumes:
+      - ./app/src/:/app
     pids_limit: 256
