@@ -1,3 +1,4 @@
 pymongo
 uvicorn
 fastapi
+pycryptodome
