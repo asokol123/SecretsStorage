@@ -2,23 +2,23 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from cipher import AESEncrypt, AESDecrypt
+from db import dbHelper
 import typing
 import secrets
 
 app = FastAPI()
 
-# TODO: replace with DB
 storage = {}
+storage = dbHelper()
 
 def store_secret(secret: str, passphrase: typing.Optional[str]) -> str:
     """Store secret protected with passphrase and returns it's key"""
-    # TODO: replace with DB
     key = secrets.token_urlsafe(64)
 
     # if passphrase is None, make it default
     passphrase = str(passphrase)
     encripted, iv = AESEncrypt(secret, passphrase)
-    storage[key] = (encripted, iv)
+    storage.insert(key, encripted, iv)
 
     return key
 
@@ -29,17 +29,19 @@ def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Optional[st
     # if passphrase is None, make it default
     passphrase = str(passphrase)
 
-    if key not in storage:
+    document = storage.find(key)
+    if document is None:
         # Wrong key
         return None
 
-    encripted, iv = storage[key]
+    encripted, iv = document
+
     message = AESDecrypt(encripted, passphrase, iv)
     if message is None:
         # Wrong passphrase
         return None
 
-    storage.pop(key)
+    storage.remove(key)
     return message
 
 

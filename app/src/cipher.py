@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import typing
 from Crypto import Random
@@ -12,11 +13,13 @@ def AESEncrypt(message: str, key: str) -> (bytes, bytes):
     iv = Random.new().read(block_size)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     enc = cipher.encrypt(message)
-    return (enc, iv)
+    return (base64.b64encode(enc), base64.b64encode(iv))
 
 def AESDecrypt(enc: bytes, key: str, iv: bytes) -> typing.Optional[str]:
     """Returns decrypted message or None if failed to decrypt"""
     try:
+        enc = base64.b64decode(enc)
+        iv = base64.b64decode(iv)
         block_size = AES.block_size
         key = hashlib.sha256(key.encode()).digest()
         cipher = AES.new(key, AES.MODE_CBC, iv)
