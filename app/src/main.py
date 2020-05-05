@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
-from fastapi import FastAPI
-from pydantic import BaseModel
 from cipher import AESEncrypt, AESDecrypt
 from db import dbHelper
-import typing
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import secrets
+import typing
+
+class InvalidSecretKey(Exception):
+    pass
+
+class InvalidPassphrase(Exception):
+    pass
+
 
 app = FastAPI()
 
@@ -31,15 +39,13 @@ def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Optional[st
 
     document = storage.find(key)
     if document is None:
-        # Wrong key
-        return None
+        raise InvalidSecretKey
 
     encripted, iv = document
 
     message = AESDecrypt(encripted, passphrase, iv)
     if message is None:
-        # Wrong passphrase
-        return None
+        raise InvalidPassphrase
 
     storage.remove(key)
     return message
@@ -60,4 +66,11 @@ def api_generate(params: ApiParamsGenerate):
 def api_secrets(secret_key: str, passphrase: typing.Optional[str] = None):
     """Returns secret and deletes it"""
     # TODO: error message and status code if passphrase or secret_key is incorrect
-    return {"secret": get_secret(secret_key, passphrase)}
+    try:
+        result = get_secret(secret_key, passphrase)
+        return {"secret": result}
+    except InvalidPassphrase:
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid passphrase'})
+    except InvalidSecretKey:
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid secret key'})
+
