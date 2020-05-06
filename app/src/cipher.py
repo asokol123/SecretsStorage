@@ -30,8 +30,13 @@ def Encrypt(secret: str, passphrase: str) -> typing.Tuple[bytes, bytes]:
     return enc, salt
 
 def Decrypt(enc: bytes, passphrase: str, salt: bytes) -> str:
-    passphrase = passphrase.encode()
-    key = get_key_from_password(passphrase, salt)
-    f = Fernet(key)
-    secret = f.decrypt(enc)
-    return secret.decode()
+    try:
+        passphrase = passphrase.encode()
+        key = get_key_from_password(passphrase, salt)
+        f = Fernet(key)
+        secret = f.decrypt(enc)
+        return secret.decode()
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except:
+        return None
