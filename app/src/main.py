@@ -19,7 +19,7 @@ app = FastAPI()
 storage = dbHelper()
 DEFAULT_PASSPHRASE = 'lorem_ipsum'
 
-async def store_secret(secret: str, passphrase: typing.Optional[str]) -> typing.Awaitable[str]:
+async def store_secret(secret: str, passphrase: typing.Optional[str], ttl: typing.Optional[int]) -> typing.Awaitable[str]:
     """Store secret protected with passphrase and returns it's key"""
     key = secrets.token_urlsafe(64)
 
@@ -27,7 +27,7 @@ async def store_secret(secret: str, passphrase: typing.Optional[str]) -> typing.
     if not passphrase:
         passphrase = DEFAULT_PASSPHRASE
     encripted, salt = Encrypt(secret, passphrase)
-    await storage.insert(key, encripted, salt)
+    await storage.insert(key, encripted, salt, ttl)
 
     return key
 
@@ -57,11 +57,12 @@ class ApiParamsGenerate(BaseModel):
     """Params of generate api method"""
     secret: str
     passphrase: typing.Optional[str] = None
+    ttl: typing.Optional[int] = None
 
 @app.post("/generate")
 async def api_generate(params: ApiParamsGenerate):
     """Stores secret and returns secret key"""
-    return {"secret_key": await store_secret(params.secret, params.passphrase)}
+    return {"secret_key": await store_secret(params.secret, params.passphrase, params.ttl)}
 
 
 @app.get("/secrets/{secret_key}")
@@ -74,5 +75,5 @@ async def api_secrets(secret_key: str, passphrase: typing.Optional[str] = None):
     except InvalidPassphrase:
         return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid passphrase'})
     except InvalidSecretKey:
-        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid secret key'})
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid or expired secret key'})
 

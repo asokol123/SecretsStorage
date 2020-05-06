@@ -1,5 +1,5 @@
-import pymongo
 from motor import motor_asyncio
+import datetime
 import typing
 
 # TODO: set index?
@@ -13,14 +13,24 @@ class dbHelper:
         self.client = motor_asyncio.AsyncIOMotorClient(addr, maxPoolSize=self.MAX_POOL_SIZE)
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
+        self.collection.create_index('expires_at', expireAfterSeconds=1)
 
-    async def insert(self, key: str, enc: str, salt: str) -> typing.Awaitable[None]:
+    async def insert(self, key: str, enc: str, salt: str, ttl: typing.Optional[int] = None) -> typing.Awaitable[None]:
         """Insert document into collection"""
-        await self.collection.insert_one({
-            'secret_key': key,
-            'enc': enc,
-            'salt': salt,
-        })
+        if ttl is None:
+            await self.collection.insert_one({
+                'secret_key': key,
+                'enc': enc,
+                'salt': salt,
+            })
+        else:
+            await self.collection.insert_one({
+                'secret_key': key,
+                'enc': enc,
+                'salt': salt,
+                'expires_at': datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl),
+            })
+
 
     async def remove(self, key: str) -> typing.Awaitable[None]:
         """Removes document from collection"""
@@ -34,5 +44,8 @@ class dbHelper:
             'secret_key': key,
         })
         if not result:
+            return None
+        expires_at = result.get('expires_at', None)
+        if expires_at is not None and datetime.datetime.utcnow() > expires_at:
             return None
         return result['enc'], result['salt']
