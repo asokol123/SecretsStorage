@@ -1,4 +1,7 @@
+[![Build Status](https://travis-ci.com/asokol123/SecretsStorage.svg?branch=master)](https://travis-ci.com/asokol123/SecretsStorage) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/08b2907c55dc4d80aac4823b6f924f42)](https://www.codacy.com/manual/asokol123/SecretsStorage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=asokol123/SecretsStorage&amp;utm_campaign=Badge_Coverage) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/08b2907c55dc4d80aac4823b6f924f42)](https://www.codacy.com/manual/asokol123/SecretsStorage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=asokol123/SecretsStorage&amp;utm_campaign=Badge_Grade)
+
 # SecretsStorage
+
 Secrets storage with fastAPI
 
 ## General
