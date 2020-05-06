@@ -32,7 +32,7 @@ storage = dbHelper(addr=get_mongo_addr(os.environ))
 DEFAULT_PASSPHRASE = 'lorem_ipsum'
 
 async def store_secret(secret: str, passphrase: typing.Optional[str], ttl: typing.Optional[int]) -> typing.Awaitable[str]:
-    """Store secret protected with passphrase and returns it's key"""
+    """Store secret protected with passphrase and returns it's key."""
     key = secrets.token_urlsafe(64)
 
     # if passphrase is None or empty, make it default
@@ -45,7 +45,7 @@ async def store_secret(secret: str, passphrase: typing.Optional[str], ttl: typin
 
 
 async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Awaitable[typing.Optional[str]]:
-    """Returns secret by key or none if passphrase or key is incorrect"""
+    """Returns secret by key or none if passphrase or key is incorrect."""
 
     # if passphrase is None or empty, make it default
     if not passphrase:
@@ -66,21 +66,20 @@ async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Await
 
 
 class ApiParamsGenerate(BaseModel):
-    """Params of generate api method"""
+    """Params of generate api method."""
     secret: str
     passphrase: typing.Optional[str] = None
     ttl: typing.Optional[int] = None
 
 @app.post("/generate")
 async def api_generate(params: ApiParamsGenerate):
-    """Stores secret and returns secret key"""
+    """Stores secret and returns secret key."""
     return {"secret_key": await store_secret(params.secret, params.passphrase, params.ttl)}
 
 
 @app.get("/secrets/{secret_key}")
 async def api_secrets(secret_key: str, passphrase: typing.Optional[str] = None):
-    """Returns secret and deletes it"""
-    # TODO: error message and status code if passphrase or secret_key is incorrect
+    """Returns secret and deletes it."""
     try:
         result = await get_secret(secret_key, passphrase)
         return JSONResponse(content={"secret": result})
