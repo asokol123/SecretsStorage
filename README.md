@@ -12,7 +12,7 @@ There is swagger UI in /docs and redoc in /redoc
 
 ## Building
 You need docker-compose to use this app.
-```
+```bash
 git clone https://github.com/asokol123/SecretsStorage
 cd SecretsStorage
 docker-compose up
