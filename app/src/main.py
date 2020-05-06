@@ -15,15 +15,8 @@ class InvalidPassphrase(Exception):
     pass
 
 def get_mongo_addr(env):
-    addr = env.get('MONGO_ADDR', None)
-    if addr is None:
-        return 'db'
-    user = env.get('MONGO_USER', None)
-    passwd = env.get('MONGO_PASS', None)
-    if user and passwd:
-        addr = 'mongodb://{}:{}@{}/'.format(user, passwd, addr)
-    else:
-        addr = 'mongodb://{}/'.format(addr)
+    addr = env.get('MONGO_ADDR', 'db')
+    addr = 'mongodb://{}/'.format(addr)
     return addr
 
 app = FastAPI()
@@ -46,7 +39,6 @@ async def store_secret(secret: str, passphrase: typing.Optional[str], ttl: typin
 
 async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Awaitable[typing.Optional[str]]:
     """Returns secret by key or none if passphrase or key is incorrect."""
-
     # if passphrase is None or empty, make it default
     if not passphrase:
         passphrase = DEFAULT_PASSPHRASE
@@ -67,9 +59,11 @@ async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Await
 
 class ApiParamsGenerate(BaseModel):
     """Params of generate api method."""
+
     secret: str
     passphrase: typing.Optional[str] = None
     ttl: typing.Optional[int] = None
+
 
 @app.post("/generate")
 async def api_generate(params: ApiParamsGenerate):
