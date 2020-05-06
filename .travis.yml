@@ -8,10 +8,9 @@ services:
   - mongodb
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.25.5
-  - MONGO_ADDR=localhost:27017
-  - MONGO_USER=travis
-  - MONGO_PASS=travis
+  global:
+    - DOCKER_COMPOSE_VERSION=1.25.5
+    - MONGO_ADDR=localhost:27017
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
