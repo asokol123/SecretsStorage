@@ -16,28 +16,30 @@ class InvalidPassphrase(Exception):
 
 app = FastAPI()
 
-storage = {}
 storage = dbHelper()
+DEFAULT_PASSPHRASE = 'lorem_ipsum'
 
-def store_secret(secret: str, passphrase: typing.Optional[str]) -> str:
+async def store_secret(secret: str, passphrase: typing.Optional[str]) -> typing.Awaitable[str]:
     """Store secret protected with passphrase and returns it's key"""
     key = secrets.token_urlsafe(64)
 
-    # if passphrase is None, make it default
-    passphrase = str(passphrase)
+    # if passphrase is None or empty, make it default
+    if not passphrase:
+        passphrase = DEFAULT_PASSPHRASE
     encripted, iv = AESEncrypt(secret, passphrase)
-    storage.insert(key, encripted, iv)
+    await storage.insert(key, encripted, iv)
 
     return key
 
 
-def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Optional[str]:
+async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Awaitable[typing.Optional[str]]:
     """Returns secret by key or none if passphrase or key is incorrect"""
 
-    # if passphrase is None, make it default
-    passphrase = str(passphrase)
+    # if passphrase is None or empty, make it default
+    if not passphrase:
+        passphrase = DEFAULT_PASSPHRASE
 
-    document = storage.find(key)
+    document = await storage.find(key)
     if document is None:
         raise InvalidSecretKey
 
@@ -47,7 +49,7 @@ def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Optional[st
     if message is None:
         raise InvalidPassphrase
 
-    storage.remove(key)
+    await storage.remove(key)
     return message
 
 
@@ -57,18 +59,18 @@ class ApiParamsGenerate(BaseModel):
     passphrase: typing.Optional[str] = None
 
 @app.post("/generate")
-def api_generate(params: ApiParamsGenerate):
+async def api_generate(params: ApiParamsGenerate):
     """Stores secret and returns secret key"""
-    return {"secret_key": store_secret(params.secret, params.passphrase)}
+    return {"secret_key": await store_secret(params.secret, params.passphrase)}
 
 
 @app.get("/secrets/{secret_key}")
-def api_secrets(secret_key: str, passphrase: typing.Optional[str] = None):
+async def api_secrets(secret_key: str, passphrase: typing.Optional[str] = None):
     """Returns secret and deletes it"""
     # TODO: error message and status code if passphrase or secret_key is incorrect
     try:
-        result = get_secret(secret_key, passphrase)
-        return {"secret": result}
+        result = await get_secret(secret_key, passphrase)
+        return JSONResponse(content={"secret": result})
     except InvalidPassphrase:
         return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={'Error': 'Invalid passphrase'})
     except InvalidSecretKey:
