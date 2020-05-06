@@ -4,8 +4,8 @@ Secrets storage with fastAPI
 ## General
 This is similar to <https://onetimesecret.com/>, but JsonAPI only.
 You can:
-  * Create note, optionally protect it with psasphrase and set timeout
-  * Get note. After getting it will be deleted.
+* Create note, optionally protect it with psasphrase and set timeout
+* Get note. After getting it will be deleted.
 
 ## API
 There is swagger UI in /docs and redoc in /redoc
