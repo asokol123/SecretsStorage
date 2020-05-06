@@ -14,12 +14,12 @@ class dbHelper:
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 
-    async def insert(self, key: str, enc: str, iv: str) -> typing.Awaitable[None]:
+    async def insert(self, key: str, enc: str, salt: str) -> typing.Awaitable[None]:
         """Insert document into collection"""
         await self.collection.insert_one({
             'secret_key': key,
             'enc': enc,
-            'iv': iv,
+            'salt': salt,
         })
 
     async def remove(self, key: str) -> typing.Awaitable[None]:
@@ -35,4 +35,4 @@ class dbHelper:
         })
         if not result:
             return None
-        return result['enc'], result['iv']
+        return result['enc'], result['salt']

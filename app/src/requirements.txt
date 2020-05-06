@@ -1,4 +1,4 @@
 motor
 uvicorn
 fastapi
-pycryptodome
+cryptography

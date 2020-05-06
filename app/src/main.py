@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from cipher import AESEncrypt, AESDecrypt
+from cipher import Encrypt, Decrypt
 from db import dbHelper
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
@@ -26,8 +26,8 @@ async def store_secret(secret: str, passphrase: typing.Optional[str]) -> typing.
     # if passphrase is None or empty, make it default
     if not passphrase:
         passphrase = DEFAULT_PASSPHRASE
-    encripted, iv = AESEncrypt(secret, passphrase)
-    await storage.insert(key, encripted, iv)
+    encripted, salt = Encrypt(secret, passphrase)
+    await storage.insert(key, encripted, salt)
 
     return key
 
@@ -45,7 +45,7 @@ async def get_secret(key: str, passphrase: typing.Optional[str]) -> typing.Await
 
     encripted, iv = document
 
-    message = AESDecrypt(encripted, passphrase, iv)
+    message = Decrypt(encripted, passphrase, iv)
     if message is None:
         raise InvalidPassphrase
 

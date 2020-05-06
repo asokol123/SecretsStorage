@@ -1,32 +1,37 @@
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
-import hashlib
+import os
 import typing
-from Crypto import Random
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
 
-def AESEncrypt(message: str, key: str) -> (bytes, bytes):
-    """Returns encrypted message and iv"""
-    block_size = AES.block_size
-    key = hashlib.sha256(key.encode()).digest()
-    message = pad(message.encode(), block_size)
-    iv = Random.new().read(block_size)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    enc = cipher.encrypt(message)
-    return (base64.b64encode(enc), base64.b64encode(iv))
+# code from https://cryptography.io/en/latest/fernet/#using-passwords-with-fernet
+def get_key_from_password(password: bytes, salt: bytes) -> bytes:
+    """Generated Fernet key from password and salt"""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password))
+    return key
 
-def AESDecrypt(enc: bytes, key: str, iv: bytes) -> typing.Optional[str]:
-    """Returns decrypted message or None if failed to decrypt"""
-    try:
-        enc = base64.b64decode(enc)
-        iv = base64.b64decode(iv)
-        block_size = AES.block_size
-        key = hashlib.sha256(key.encode()).digest()
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        message = cipher.decrypt(enc)
-        return unpad(message, block_size).decode()
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    # To prevent padding oracle and everything like that
-    except Exception as e:
-        return None
+def Encrypt(secret: str, passphrase: str) -> typing.Tuple[bytes, bytes]:
+    """Encrypts secret with given password and returns encrypted message and salt"""
+    salt = os.urandom(16)
+    secret = secret.encode()
+    passphrase = passphrase.encode()
+    key = get_key_from_password(passphrase, salt)
+    f = Fernet(key)
+    enc = f.encrypt(secret)
+    return enc, salt
+
+def Decrypt(enc: bytes, passphrase: str, salt: bytes) -> str:
+    passphrase = passphrase.encode()
+    key = get_key_from_password(passphrase, salt)
+    f = Fernet(key)
+    secret = f.decrypt(enc)
+    return secret.decode()
