@@ -7,7 +7,7 @@ import typing
 # I want separate class to me able to change DB from mongo
 class dbHelper:
     """Class to connect to db"""
-    def __init__(self, db_name: str='app', collection_name: str='secrets', addr: str='db') -> None:
+    def __init__(self, addr: str, db_name: str='app', collection_name: str='secrets') -> None:
         """Creates dbHelper"""
         self.MAX_POOL_SIZE = 10
         self.client = motor_asyncio.AsyncIOMotorClient(addr, maxPoolSize=self.MAX_POOL_SIZE)

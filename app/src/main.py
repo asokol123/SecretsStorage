@@ -4,6 +4,7 @@ from db import dbHelper
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import os
 import secrets
 import typing
 
@@ -13,10 +14,21 @@ class InvalidSecretKey(Exception):
 class InvalidPassphrase(Exception):
     pass
 
+def get_mongo_addr(env):
+    addr = env.get('MONGO_ADDR', None)
+    if addr is None:
+        return 'db'
+    user = env.get('MONGO_USER', None)
+    passwd = env.get('MONGO_PASS', None)
+    if user and passwd:
+        addr = 'mongodb://{}:{}@{}/'.format(user, passwd, addr)
+    else:
+        addr = 'mongodb://{}/'.format(addr)
+    return addr
 
 app = FastAPI()
 
-storage = dbHelper()
+storage = dbHelper(addr=get_mongo_addr(os.environ))
 DEFAULT_PASSPHRASE = 'lorem_ipsum'
 
 async def store_secret(secret: str, passphrase: typing.Optional[str], ttl: typing.Optional[int]) -> typing.Awaitable[str]:

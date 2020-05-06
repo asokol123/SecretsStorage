@@ -1,0 +1,30 @@
+language: python
+
+python:
+  - "3.7"
+
+services:
+  - docker
+  - mongodb
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.25.5
+  - MONGO_ADDR=localhost:27017
+  - MONGO_USER=travis
+  - MONGO_PASS=travis
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+install:
+  - pip3 install -r app/src/requirements.txt
+  - pip3 install pytest
+
+before_script:
+  - mongo app --eval 'db.createUser({user:"$MONGO_USER",pwd:"$MONGO_PASS",roles:["readWrite"]});'
+
+script:
+  - pytest src/app
