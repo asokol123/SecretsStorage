@@ -21,7 +21,7 @@ before_install:
 
 install:
   - pip3 install -r app/src/requirements.txt
-  - pip3 install pytest
+  - pip3 install pytest requests
 
 before_script:
   - mongo app --eval 'db.createUser({user:"$MONGO_USER",pwd:"$MONGO_PASS",roles:["readWrite"]});'
